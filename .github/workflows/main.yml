@@ -3,7 +3,7 @@ name: Update Docker Compose
 on:
   push:
     branches: 
-      - dev
+      - main
     paths:
       - 'docker-compose.yml'
 
