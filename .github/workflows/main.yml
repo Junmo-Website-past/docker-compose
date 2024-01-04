@@ -31,6 +31,6 @@ jobs:
           # 이전 docker-compose.yml 삭제
           sudo rm -f docker-compose.yml
           # 새로운 docker-compose.yml 업로드
-          scp /home/runner/work/docker-compose/docker-compose/docker-compose.yml $EC2_USERNAME@$EC2_HOST:/docker-compose/
+          sudo cp /home/runner/work/<your-repo-name>/<your-repo-name>/docker-compose.yml /docker-compose/
           # Docker Compose 실행
           sudo docker-compose up -d
