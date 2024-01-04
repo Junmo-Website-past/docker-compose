@@ -1,36 +1,45 @@
-name: Update Docker Compose
+name: Upload to EC2
 
 on:
   push:
-    branches: 
+    branches:
       - main
-    paths:
-      - 'docker-compose.yml'
-      - 'triger'
 
 jobs:
-  deploy: 
+  upload:
     runs-on: ubuntu-latest
-    steps:
-    - name: checkout
-      uses: actions/checkout@v3
 
-    - name: EC2 Docker Compose Update and Run
-      uses: appleboy/ssh-action@v1.0.0
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Create docker-compose directory in EC2
+      uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.EC2_HOST }}
         username: ${{ secrets.EC2_USERNAME }}
-        port: 22
         key: ${{ secrets.EC2_PRIVATE_KEY }}
         script: |
           if [ ! -d "/docker-compose" ]; then
             sudo mkdir /docker-compose
             sudo chown $USER:$USER /docker-compose
           fi
+
+    - name: Upload docker-compose.yml to EC2
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        key: ${{ secrets.EC2_PRIVATE_KEY }}
+        source: "./docker-compose.yml"
+        target: "/docker-compose/"
+
+    - name: Run docker-compose in EC2
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        key: ${{ secrets.EC2_PRIVATE_KEY }}
+        script: |
           cd /docker-compose
-          # 이전 docker-compose.yml 삭제
-          sudo rm -f docker-compose.yml
-          # 새로운 docker-compose.yml 업로드
-          sudo cp /home/runner/work/Junmo-Website/docker-compose/docker-compose.yml /docker-compose/
-          # Docker Compose 실행
           sudo docker-compose up -d
