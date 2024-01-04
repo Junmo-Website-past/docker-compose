@@ -1,0 +1,35 @@
+name: Update Docker Compose
+
+on:
+  push:
+    branches: 
+      - dev
+    paths:
+      - 'docker-compose.yml'
+
+jobs:
+  deploy: 
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout
+      uses: actions/checkout@v3
+
+    - name: EC2 Docker Compose Update and Run
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        port: 22
+        key: ${{ secrets.EC2_PRIVATE_KEY }}
+        script: |
+          if [ ! -d "/docker-compose" ]; then
+            sudo mkdir /docker-compose
+            sudo chown $USER:$USER /docker-compose
+          fi
+          cd /docker-compose
+          # 이전 docker-compose.yml 삭제
+          sudo rm docker-compose.yml
+          # 새로운 docker-compose.yml 업로드
+          scp ${{ github.workspace }}/docker-compose.yml ${secrets.EC2_USERNAME}@${secrets.EC2_HOST}:/docker-compose/
+          # Docker Compose 실행
+          sudo docker-compose up -d
